@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise Ulang Tahun!</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #fff5f8;
+            --cake-pink: #ff85a1;
+            --cake-cream: #fce4ec;
+            --text-color: #d81b60;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #cake-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+        }
+
+        .layer {
+            position: absolute;
+            bottom: 0;
+            border-radius: 15px 15px 5px 5px;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateY(100vh); /* Start from bottom */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Cream drip effect */
+        .layer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+        }
+
+        .candle {
+            position: absolute;
+            width: 12px;
+            height: 40px;
+            background: linear-gradient(to right, #ffd54f, #fbc02d);
+            bottom: 0;
+            border-radius: 4px;
+            transform: translateY(100vh);
+            transition: transform 0.8s ease-out;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .flame {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 18px;
+            background: #ff9800;
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 0 15px #ff9800;
+            animation: flicker 0.1s infinite alternate;
+        }
+
+        @keyframes flicker {
+            from { transform: translateX(-50%) scale(1); opacity: 0.9; }
+            to { transform: translateX(-50%) scale(1.1); opacity: 1; }
+        }
+
+        #message {
+            position: absolute;
+            top: 15%;
+            text-align: center;
+            width: 90%;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1s ease;
+            color: var(--text-color);
+        }
+
+        #message h1 { font-size: 2.5rem; margin: 0; }
+        #message p { font-size: 1.2rem; margin-top: 10px; }
+
+        .show-message {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+        #start-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: var(--cake-pink);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 133, 161, 0.4);
+            z-index: 100;
+        }
+
+        #start-btn:hover { background: #ff6085; }
+
+    </style>
+</head>
+<body>
+
+    <div id="message">
+        <h1>Selamat Ulang Tahun! 🎂</h1>
+        <p>Semoga harimu dipenuhi kebahagiaan dan cinta.</p>
+        <p><small>(Klik lilin untuk meniupnya!)</small></p>
+    </div>
+
+    <div id="cake-container">
+        <!-- Layers will be generated here -->
+    </div>
+
+    <button id="start-btn" onclick="startSurprise()">Klik Untuk Kejutan!</button>
+
+    <script>
+        const cakeContainer = document.getElementById('cake-container');
+        const message = document.getElementById('message');
+        const startBtn = document.getElementById('start-btn');
+
+        const layerData = [
+            { width: 220, height: 70, color: '#f06292', bottom: 0 },
+            { width: 180, height: 60, color: '#f48fb1', bottom: 70 },
+            { width: 130, height: 50, color: '#f8bbd0', bottom: 130 },
+        ];
+
+        function createCake() {
+            layerData.forEach((data, index) => {
+                const layer = document.createElement('div');
+                layer.className = 'layer';
+                layer.style.width = data.width + 'px';
+                layer.style.height = data.height + 'px';
+                layer.style.backgroundColor = data.color;
+                layer.style.bottom = data.bottom + 'px';
+                layer.id = `layer-${index}`;
+                cakeContainer.appendChild(layer);
+
+                // Animasi muncul berurutan
+                setTimeout(() => {
+                    layer.style.transform = 'translateY(0)';
+                }, 500 * (index + 1));
+            });
+
+            // Tambahkan Lilin
+            const lastLayer = layerData[layerData.length - 1];
+            const candle = document.createElement('div');
+            candle.className = 'candle';
+            candle.style.bottom = (lastLayer.bottom + lastLayer.height) + 'px';
+            
+            const flame = document.createElement('div');
+            flame.className = 'flame';
+            candle.appendChild(flame);
+            
+            cakeContainer.appendChild(candle);
+
+            setTimeout(() => {
+                candle.style.transform = 'translateY(0)';
+                showFinalEffects();
+            }, 500 * (layerData.length + 1));
+
+            // Event tiup lilin
+            candle.onclick = function() {
+                flame.style.display = 'none';
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            };
+        }
+
+        function showFinalEffects() {
+            message.classList.add('show-message');
+            // Efek confetti otomatis saat kue selesai
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ff85a1', '#fce4ec', '#ffeb3b']
+            });
+        }
+
+        function startSurprise() {
+            startBtn.style.display = 'none';
+            createCake();
+        }
+    </script>
+</body>
+</html>
